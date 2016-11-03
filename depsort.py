@@ -5,12 +5,12 @@ from collections import namedtuple
 from termcolor import colored
 
 #define a file struct
-FILE = namedtuple("file_t", "name path dependencies level mark")
+FILE = namedtuple("file_t", "name path dependencies level mark info")
 #get the current working directory
 ORIGIN = os.getcwd()
 NAME = "DEPSORT"
 #create a mark to color dictionary
-COLOR_DICT =  {'0':'black', '1':'green', '2':'yellow', '3':'red'}
+COLOR_DICT =  {'hidden':'hidden', 'normal':'black', 'analyzed':'green', 'special':'blue', 'error':'red'}
 
 def get_files_in_dir(path):
     os.chdir(path)
@@ -37,8 +37,9 @@ def get_mark(path):
     buf = fd.read()
     fd.close()
     index = buf.find("//" + NAME + ":")
-    index2 = buf.find("\n", index)
-    if index == -1 or index2 == -1: return "0"
+    index2 = buf.find(";", index)
+    if index == -1 or index2 == -1:
+        return "0"
     return buf[index + len(NAME) + 3 : index2]
 
 def set_mark(name, mark):
@@ -50,16 +51,65 @@ def set_mark(name, mark):
     buf = fd_in.read()
     fd_in.close()
     index = buf.find("//" + NAME + ":")
+    index2 = buf.find(";", index)
     if index == -1:
         fd_out.write(buf)
-        fd_out.write("//" + NAME + ":" + mark)
+        fd_out.write("//" + NAME + ":" + mark + ";")
         fd_out.close()
     else:
+        if index2 == -1:
+            print "Expecting semicolon in file: ",
+            print path
+            fd_out.close()
+            return
         fd_out.write(buf[:index])
-        fd_out.write("//" + NAME + ":" + mark)
-        fd_out.write(buf[index + len(NAME) + 4:])
+        fd_out.write("//" + NAME + ":" + mark + ";")
+        fd_out.write(buf[index2+1:])
         fd_out.close()
     os.system("mv " + path + ".tmp " + path)
+
+def get_info(path):
+    fd = open(path, "r")
+    buf = fd.read()
+    fd.close()
+    index1 = buf.find("/*" + NAME + "_INFO:")
+    index2 = buf.find("*/", index1)
+    if index1 == -1 or index2 == -1:
+        return ""
+    return buf[index1 + len(NAME) + 8: index2]
+
+def set_infos(name, infos):
+    f = find_by_name(files, name)
+    if f is None: return
+    path = f.path
+    fd_in = open(path, "r")
+    fd_out = open(path+".tmp", "w")
+    buf = fd_in.read()
+    fd_in.close()
+    index = buf.find("/*" + NAME + "_INFO:")
+    index2 = buf.find("*/", index)
+    if index == -1:
+        fd_out.write(buf)
+        fd_out.write("/*" + NAME + "_INFO:")
+        for i in infos:
+            fd_out.write(i + " ")
+        fd_out.write("*/")
+        fd_out.close()
+    else:
+        if index2 == -1:
+            print "Expecting \"*/\" in file: ",
+            print path
+            fd_out.close()
+            return 
+        fd_out.write(buf[:index])
+        fd_out.write("/*" + NAME + "_INFO:")
+        for i in infos:
+            fd_out.write(i + " ")
+        fd_out.write("*/")
+        fd_out.write(buf[index2 + 3:])
+        fd_out.close()
+    os.system("mv " + path + ".tmp " + path)
+
 
 def analyze_file(path, stack):
     fd = open(path, "r")
@@ -71,7 +121,7 @@ def analyze_file(path, stack):
     for d in dependencies:
         if d not in stack:
             level += analyze_file(os.path.dirname(path) + "/"  + d[10:-1], stack).level
-    return FILE(name, path, dependencies, level, get_mark(path))
+    return FILE(name, path, dependencies, level, get_mark(path), get_info(path))
 
 def analyze_dir(path):
     files_in_dir = get_files_in_dir(path)
@@ -83,12 +133,17 @@ def analyze_dir(path):
         result += analyze_dir(path + "/" +d)
     return result
 
-def print_colored(string, color):
-    if color =="black" or None:
-        print string
-        return
-    print colored(string, color)
-    return
+def print_files(files):
+    for i in range(0, len(files)):
+            color = COLOR_DICT.get(files[i].mark)
+            if color == "hidden":
+                continue
+            if color == "black" or None:
+                print "(" + files[i].level.__str__() + "): ",
+                print files[i].name
+                continue
+            print "(" + files[i].level.__str__() + "): ",
+            print colored(files[i].name, color)
 
 def find_by_name(files, name):
     for f in files:
@@ -98,9 +153,7 @@ def find_by_name(files, name):
 #MAIN
 files= analyze_dir(ORIGIN)
 files.sort(key=lambda x:x.level)
-for i  in range(0, len(files)):
-    print "(" + files[i].level.__str__() + "): ",
-    print_colored(files[i].name, COLOR_DICT.get(files[i].mark))
+print_files(files)
 
 while True:
     cmd = raw_input("Enter a command: ")
@@ -114,10 +167,8 @@ while True:
         if cmd_list[0] == "refresh" or cmd_list[0] == "r":
             files= analyze_dir(ORIGIN)
             files.sort(key=lambda x:x.level)
-            for i  in range(0, len(files)):
-                print "(" + files[i].level.__str__() + "): ",
-                print_colored(files[i].name, COLOR_DICT.get(files[i].mark))
-                continue
+            print_files(files)
+            continue
         if cmd_list[0] == "quit" or cmd_list[0] == "q":
             exit()
     if len(cmd_list) >= 3:
@@ -128,14 +179,19 @@ while True:
             if cmd_list[1] == "code" or cmd_list[1] == "c":
                 os.system("vim " + cmd_list[2])
                 continue
-            if cmd_list[1] == "intern" or cmd_list[1] == "i":
+            if cmd_list[1] == "intern":
                 print find_by_name(files, cmd_list[2])
+                continue
+            if cmd_list[1] == "info" or cmd_list[1] == "i":
+                print find_by_name(files, cmd_list[2]).info
                 continue
             print "show: Invalid option"
             continue
         if cmd_list[0] == "mark" or cmd_list[0] == "m":
-            if int(cmd_list[2]) < 0 and int(cmd_list[2]) > 3:
+            if cmd_list[2] not in COLOR_DICT.keys():
                 print "mark: invalid option"
                 continue
             set_mark(cmd_list[1], cmd_list[2])
             continue
+        if cmd_list[0] == "info" or cmd_list[0] == "i":
+            set_infos(cmd_list[1], cmd_list[2:])
