@@ -17,7 +17,8 @@ def get_files_in_dir(path):
     result = []
     entries = os.listdir(path)
     for e in entries:
-        if os.path.isdir(e) == 0:
+        if os.path.isdir(e) == 0 and (e.endswith(".c") or e.endswith(".cpp")
+        or e.endswith(".h") or e.endswith(".hpp")):
             result.append(e)
     os.chdir(ORIGIN)
     return result
