@@ -162,9 +162,6 @@ while True:
 
     if len(cmd_list) == 0: continue
     if len(cmd_list) >= 1:
-        if cmd_list[0] == "help" or cmd_list[0] == "h":
-            help()
-            continue
         if cmd_list[0] == "refresh" or cmd_list[0] == "r":
             files= analyze_dir(ORIGIN)
             files.sort(key=lambda x:x.level)
