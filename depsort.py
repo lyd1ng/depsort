@@ -10,7 +10,7 @@ FILE = namedtuple("file_t", "name path dependencies level mark info")
 ORIGIN = os.getcwd()
 NAME = "DEPSORT"
 #create a mark to color dictionary
-COLOR_DICT =  {'hidden':'hidden', 'normal':'black', 'analyzed':'green', 'special':'blue', 'error':'red'}
+COLOR_DICT =  {'hidden':'hidden', 'normal':'black', 'analysed':'green', 'special':'blue', 'error':'red'}
 
 def get_files_in_dir(path):
     os.chdir(path)
