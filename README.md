@@ -10,10 +10,15 @@ The changes are special c-style comments so that the workability should not be e
 The marks "hidden", "normal", "analysed", "special" and "error" are valid marks and mapped to colours:
 
 hidden   : not displayed
+
 normal   : black
+
 analysed : green
+
 special  : blue
+
 error    : red
+
 
 The depsort programme provides following commands:
 (Every command except "intern" can be abbreviated by using its first letter only)
