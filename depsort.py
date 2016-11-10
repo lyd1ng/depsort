@@ -3,12 +3,16 @@
 import sys, os, re
 from collections import namedtuple
 from termcolor import colored
+import subprocess
+import time
 
 #define a file struct
 FILE = namedtuple("file_t", "name path dependencies level mark info")
 #get the current working directory
 ORIGIN = os.getcwd()
 NAME = "DEPSORT"
+#Define the cmd to start a programme in a new console window
+TERMINAL_CMD = "xterm -e"
 #create a mark to color dictionary
 COLOR_DICT =  {'hidden':'hidden', 'normal':'black', 'analysed':'green', 'special':'blue', 'error':'red'}
 
@@ -151,6 +155,10 @@ def find_by_name(files, name):
         if f.name == name: return f
     return None
 
+def check_vim_server():
+    servers = subprocess.Popen(["vim", "--serverlist"], stdout=subprocess.PIPE).communicate()[0].split("\n")
+    return NAME in servers
+
 #MAIN
 files= analyze_dir(ORIGIN)
 files.sort(key=lambda x:x.level)
@@ -168,6 +176,7 @@ while True:
             print_files(files)
             continue
         if cmd_list[0] == "quit" or cmd_list[0] == "q":
+            os.system("vim --servername " + NAME + " --remote-send \":qa<CR>\"")
             exit()
     if len(cmd_list) >= 3:
         if cmd_list[0] == "show" or cmd_list[0] == "s":
@@ -175,7 +184,10 @@ while True:
                 print find_by_name(files, cmd_list[2]).dependencies
                 continue
             if cmd_list[1] == "code" or cmd_list[1] == "c":
-                os.system("vim " + cmd_list[2])
+                if not check_vim_server():
+                    os.system(TERMINAL_CMD + " vim --servername " + NAME + "&")
+                    time.sleep(0.25)
+                os.system("vim --servername " + NAME + " --remote-tab " + cmd_list[2])
                 continue
             if cmd_list[1] == "intern":
                 print find_by_name(files, cmd_list[2])
