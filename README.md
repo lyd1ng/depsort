@@ -21,6 +21,7 @@ error    : red
 
 
 The depsort programme provides following commands:
+
 (Every command except "intern" can be abbreviated by using its first letter only)
 
 show [code, dependencies, intern, info] file_name : Most should be selfe-explanatory.
