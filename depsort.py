@@ -8,7 +8,7 @@ import subprocess
 import time
 
 # define a file struct
-FILE = namedtuple("file_t", "name path dependencies level mark info")
+FILE_STRUCT = namedtuple("file_t", "name path dependencies level mark info")
 # get the current working directory
 ORIGIN = os.getcwd()
 NAME = "DEPSORT"
@@ -140,7 +140,7 @@ def analyze_file(path, stack):
     for d in dependencies:
         if d not in stack:
             level += analyze_file(os.path.dirname(path) + "/" + d[10:-1], stack).level
-    return FILE(
+    return FILE_STRUCT(
         name,
         path,
         dependencies,
