@@ -1,6 +1,5 @@
 #!/usr/bin/python2
 
-import sys
 import os
 import re
 from collections import namedtuple
@@ -75,8 +74,8 @@ def set_mark(name, mark):
         fd_out.close()
     else:
         if index2 == -1:
-            print "Expecting semicolon in file: ",
-            print path
+            print("Expecting semicolon in file: ",)
+            print(path)
             fd_out.close()
             return
         fd_out.write(buf[:index])
@@ -117,8 +116,8 @@ def set_infos(name, infos):
         fd_out.close()
     else:
         if index2 == -1:
-            print "Expecting \"*/\" in file: ",
-            print path
+            print("Expecting \"*/\" in file: ",)
+            print(path)
             fd_out.close()
             return
         fd_out.write(buf[:index])
@@ -167,11 +166,11 @@ def print_files(files):
         if color == "hidden":
             continue
         if color == "black" or None:
-            print "(" + files[i].level.__str__() + "): ",
-            print files[i].name
+            print("(" + files[i].level.__str__() + "): ",)
+            print(files[i].name)
             continue
-        print "(" + files[i].level.__str__() + "): ",
-        print colored(files[i].name, color)
+        print("(" + files[i].level.__str__() + "): ",)
+        print(colored(files[i].name, color))
 
 
 def find_by_name(files, name):
@@ -193,7 +192,7 @@ files.sort(key=lambda x: x.level)
 print_files(files)
 
 while True:
-    cmd = raw_input("Enter a command: ")
+    cmd = input("Enter a command: ")
     cmd_list = cmd.split()
 
     if len(cmd_list) == 0:
@@ -211,7 +210,7 @@ while True:
     if len(cmd_list) >= 3:
         if cmd_list[0] == "show" or cmd_list[0] == "s":
             if cmd_list[1] == "dependencies" or cmd_list[1] == "d":
-                print find_by_name(files, cmd_list[2]).dependencies
+                print(find_by_name(files, cmd_list[2]).dependencies)
                 continue
             if cmd_list[1] == "code" or cmd_list[1] == "c":
                 if not check_vim_server():
@@ -221,16 +220,16 @@ while True:
                     "vim --servername " + NAME + " --remote-tab " + cmd_list[2])
                 continue
             if cmd_list[1] == "intern":
-                print find_by_name(files, cmd_list[2])
+                print(find_by_name(files, cmd_list[2]))
                 continue
             if cmd_list[1] == "info" or cmd_list[1] == "i":
-                print find_by_name(files, cmd_list[2]).info
+                print(find_by_name(files, cmd_list[2]).info)
                 continue
-            print "show: Invalid option"
+            print("show: Invalid option")
             continue
         if cmd_list[0] == "mark" or cmd_list[0] == "m":
             if cmd_list[2] not in COLOR_DICT.keys():
-                print "mark: invalid option"
+                print("mark: invalid option")
                 continue
             set_mark(cmd_list[1], cmd_list[2])
             continue
