@@ -166,11 +166,9 @@ def print_files(files):
         if color == "hidden":
             continue
         if color == "black" or None:
-            print("(" + files[i].level.__str__() + "): ",)
-            print(files[i].name)
+            print("(" + files[i].level.__str__() + "): " + files[i].name, color)
             continue
-        print("(" + files[i].level.__str__() + "): ",)
-        print(colored(files[i].name, color))
+        print("(" + files[i].level.__str__() + "): " + colored(files[i].name, color))
 
 
 def find_by_name(files, name):
